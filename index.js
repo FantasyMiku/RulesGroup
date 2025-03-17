@@ -130,9 +130,6 @@ const chinaDNS = [
     'https://223.6.6.6/dns-query#h3=true',
     'https://doh.pub/dns-query',
     'https://1.12.12.12/dns-query',
-    'tls://223.5.5.5',
-    'tls://223.6.6.6',
-    'tls://119.29.29.29'
 ]
 
 const foreignDNS = [
@@ -141,17 +138,12 @@ const foreignDNS = [
     'https://1.0.0.1/dns-query#PROXY#h3=true',
     'https://8.8.8.8/dns-query#PROXY#h3=true',
     'quic://Sakura-a27685.dns.nextdns.io',
-    'tls://8.8.8.8',
-    'tls://8.8.4.4'
 ]
 
 /**
  * 腾讯DNS，专门给QQ做解析用的（毕竟自己解析自己速度最快x）
  */
-const qqDNS = [
-    'https://doh.pub/dns-query',
-    'tls://119.29.29.29'
-]
+const qqDNS = ['https://doh.pub/dns-query', '119.29.29.29']
 
 /**
  * DNS相关配置
@@ -191,7 +183,7 @@ const ruleProviderCommon = {
 // 代理组通用配置
 const groupBaseOption = {
     interval: 300,
-    timeout: 3000,
+    timeout: 5000,
     url: 'http://cp.cloudflare.com/generate_204',
     lazy: true,
     'max-failed-times': 3,
@@ -230,6 +222,13 @@ function main(config) {
     let otherProxyGroups = config.proxies.map((b) => {
         return b.name
     })
+    let fallbackGroups = config.proxies.filter((value) => {
+        const name = value.name === null ? undefined : value.name
+        return name.includes('香港') && (name.includes('Hy2') || name.includes('Worker'))
+    }).map((b) => {
+        return b.name
+    });
+
 
     config['allow-lan'] = true
 
@@ -376,9 +375,16 @@ function main(config) {
             ...groupBaseOption,
             name: '默认节点',
             type: 'select',
-            proxies: [...proxyGroupsRegionNames, '直连'],
+            proxies: [...proxyGroupsRegionNames, '自动回退', '直连'],
             icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Proxy.png',
         },
+        {
+            ...groupBaseOption,
+            name: '自动回退',
+            type: 'fallback',
+            proxies: fallbackGroups,
+            icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Auto.png',
+        }
     ]
 
     config.proxies = config?.proxies || []
