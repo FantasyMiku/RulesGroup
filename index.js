@@ -127,20 +127,31 @@ const regionOptions = {
  */
 const chinaDNS = [
     'https://223.5.5.5/dns-query#h3=true',
-    'https://doh.pub/dns-query'
+    'https://223.6.6.6/dns-query#h3=true',
+    'https://doh.pub/dns-query',
+    'https://1.12.12.12/dns-query',
+    'tls://223.5.5.5',
+    'tls://223.6.6.6',
+    'tls://119.29.29.29'
 ]
 
 const foreignDNS = [
-    'https://185.236.104.104/dns-query#h3=true',
-    'https://1.1.1.1/dns-query#h3=true',
-    'https://8.8.8.8/dns-query#h3=true',
+    'https://185.236.104.104/dns-query#PROXY#h3=true',
+    'https://1.1.1.1/dns-query#PROXY#h3=true',
+    'https://1.0.0.1/dns-query#PROXY#h3=true',
+    'https://8.8.8.8/dns-query#PROXY#h3=true',
     'quic://Sakura-a27685.dns.nextdns.io',
+    'tls://8.8.8.8',
+    'tls://8.8.4.4'
 ]
 
 /**
  * 腾讯DNS，专门给QQ做解析用的（毕竟自己解析自己速度最快x）
  */
-const qqDNS = [ 'https://doh.pub/dns-query' ]
+const qqDNS = [
+    'https://doh.pub/dns-query',
+    'tls://119.29.29.29'
+]
 
 /**
  * DNS相关配置
@@ -164,7 +175,7 @@ const dnsConfig = {
      */
     'nameserver-policy': {
         'geosite:private': 'system',
-        '+.qq.com': qqDNS,
+        '+.qq.com,+.tencents.com': qqDNS,
         'geosite:cn,steam@cn,category-games@cn,microsoft@cn,apple@cn': chinaDNS,
         'geosite:geolocation-!cn': foreignDNS,
     },
@@ -251,6 +262,12 @@ function main(config) {
      * 适合小内存环境，如果在旁路由里运行可以改成standard
      */
     config['geodata-loader'] = 'memconservative'
+
+    config['geox-url'] = {
+        geosite: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat",
+        geoip: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat",
+        mmdb: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb"
+    }
 
     config['geo-auto-update'] = true
 
