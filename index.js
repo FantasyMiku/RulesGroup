@@ -20,6 +20,7 @@ const enable = true
 const ruleOptions = {
     apple: true, // 苹果服务
     microsoft: true, // 微软服务
+    github: true, // Github
     google: true, // Google服务
     openai: true, // 国外AI和GPT
     spotify: false, // Spotify
@@ -42,6 +43,19 @@ const ruleOptions = {
     tracker: true, // 网络分析和跟踪服务
     ads: true, // 常见的网络广告
 }
+
+/**
+ * 这是一个前置规则自定义
+ * 默认是带了向日葵和AnyDesk
+ */
+const rules = [
+    'RULE-SET,applications,下载软件',
+    'PROCESS-NAME,SunloginClient,DIRECT',
+    'PROCESS-NAME,SunloginClient.exe,DIRECT',
+    'PROCESS-NAME,AnyDesk,DIRECT',
+    'PROCESS-NAME,AnyDesk.exe,DIRECT',
+    'DOMAIN-SUFFIX,eslint.org.cn,其他外网',
+]
 
 /**
  * 地区配置，通过regex匹配代理节点名称
@@ -199,14 +213,6 @@ ruleProviders.set('applications', {
     path: './ruleset/DustinWin/applications.list',
 })
 
-// 额外规则
-const rules = [
-    'RULE-SET,applications,下载软件',
-    'PROCESS-NAME,SunloginClient,DIRECT',
-    'PROCESS-NAME,SunloginClient.exe,DIRECT',
-    'DOMAIN-SUFFIX,eslint.org.cn,其他外网',
-]
-
 // 程序入口
 function main(config) {
     const proxyCount = config?.proxies?.length ?? 0
@@ -278,23 +284,38 @@ function main(config) {
      * Mijia Cloud跳过是网上抄的
      */
     config['sniffer'] = {
-        enable: true,
-        'force-dns-mapping': true,
-        'parse-pure-ip': true,
-        'override-destination': false,
-        sniff: {
-            TLS: {
-                ports: [443, 8443],
-            },
-            HTTP: {
-                ports: [80, '8080-8880'],
-            },
-            QUIC: {
-                ports: [443, 8443],
-            },
+      enable: true,
+      'force-dns-mapping': true,
+      'parse-pure-ip': false,
+      'override-destination': true,
+      sniff: {
+        TLS: {
+          ports: [443, 8443],
         },
-        'force-domain': [],
-        'skip-domain': ['Mijia Cloud', '+.oray.com'],
+        HTTP: {
+          ports: [80, '8080-8880'],
+        },
+        QUIC: {
+          ports: [443, 8443],
+        },
+      },
+      'skip-src-address': [
+        '127.0.0.0/8',
+        '192.168.0.0/16',
+        '10.0.0.0/8',
+        '172.16.0.0/12',
+      ],
+      'force-domain': [
+        '+.google.com',
+        '+.googleapis.com',
+        '+.googleusercontent.com',
+        '+.youtube.com',
+        '+.facebook.com',
+        '+.messenger.com',
+        '+.fbcdn.net',
+        'fbcdn-a.akamaihd.net',
+      ],
+      'skip-domain': ['Mijia Cloud', '+.oray.com'],
     }
 
     /**
@@ -658,6 +679,18 @@ function main(config) {
         })
     }
 
+    if (ruleOptions.github) {
+      rules.push('GEOSITE,github,Github')
+      config['proxy-groups'].push({
+        ...groupBaseOption,
+        name: 'Github',
+        type: 'select',
+        proxies: ['默认节点', ...proxyGroupsRegionNames, '直连'],
+        url: 'https://github.com/robots.txt',
+        icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/GitHub.png',
+      })
+    }
+  
     if (ruleOptions.microsoft) {
         rules.push('GEOSITE,microsoft@cn,国内网站', 'GEOSITE,microsoft,微软服务')
         config['proxy-groups'].push({
